@@ -83,3 +83,6 @@ secrets/
 *.pem
 *.key
 !public.key
+
+# Nested clone (avoid committing clone of same repo)
+/Meera/
