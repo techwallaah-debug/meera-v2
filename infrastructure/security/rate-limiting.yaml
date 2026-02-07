@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rate-limit-config
+  namespace: social-commerce
+data:
+  rate-limit-config.yaml: |
+    rate_limits:
+      # Per-user limits
+      user:
+        requests_per_minute: 100
+        requests_per_hour: 1000
+        requests_per_day: 10000
+      
+      # Per-IP limits (DDoS protection)
+      ip:
+        requests_per_minute: 200
+        requests_per_hour: 5000
+        requests_per_day: 50000
+      
+      # Endpoint-specific limits
+      endpoints:
+        "/register":
+          requests_per_minute: 5
+          requests_per_hour: 20
+        "/token":
+          requests_per_minute: 10
+          requests_per_hour: 50
+        "/upload-media":
+          requests_per_minute: 20
+          requests_per_hour: 100
+        "/orders":
+          requests_per_minute: 30
+          requests_per_hour: 200
+      
+      # Service-specific limits
+      services:
+        user-service:
+          requests_per_minute: 500
+        content-service:
+          requests_per_minute: 1000
+        product-service:
+          requests_per_minute: 800
+        order-service:
+          requests_per_minute: 300
+        search-service:
+          requests_per_minute: 2000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddos-protection
+  namespace: social-commerce
+data:
+  ddos-config.yaml: |
+    protection:
+      enabled: true
+      # Connection limits
+      max_connections_per_ip: 50
+      max_connections_per_user: 100
+      
+      # Request patterns
+      suspicious_patterns:
+        - "rapid_requests"
+        - "large_payload"
+        - "unusual_user_agent"
+      
+      # Auto-block
+      auto_block:
+        enabled: true
+        threshold: 1000  # requests per minute
+        duration: 3600   # block for 1 hour
+      
+      # Rate limit headers
+      headers:
+        enabled: true
+        show_remaining: true
+        show_reset_time: true

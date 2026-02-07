@@ -1,0 +1,88 @@
+# Cursor AI Rules for Social Commerce Platform
+
+## Project Context
+This is an AI-powered social commerce platform for India, built with:
+- Backend: FastAPI microservices with MySQL
+- Frontend: React Native (mobile) + Next.js (web)
+- AI/ML: PyTorch, OpenAI GPT-4, custom recommendation models
+
+## Code Style
+
+### Python
+- Use type hints for all function parameters and return types
+- Follow PEP 8 style guide
+- Use f-strings for string formatting
+- Prefer async/await for I/O operations
+- Document functions with docstrings (Google style)
+
+### Database
+- Use MySQL 8.0 as primary database
+- Use SQLAlchemy ORM, not raw SQL
+- All models should inherit from BaseModel in shared/database/models.py
+- Use proper indexes on foreign keys and frequently queried columns
+- Use JSON columns for flexible data (media_urls, product_tags, etc.)
+
+### API Design
+- Use RESTful conventions
+- Return proper HTTP status codes
+- Use Pydantic models for request/response validation
+- Include pagination for list endpoints (skip, limit)
+- Use consistent error response format
+
+### Authentication
+- Use JWT tokens for authentication
+- Token should include user_id in "sub" claim
+- Use shared/auth utilities for consistency
+- Protect endpoints with get_current_user dependency
+
+## File Structure
+- Each microservice in backend/services/<service-name>/src/
+- Shared utilities in backend/shared/
+- Use __init__.py files for proper package structure
+- Keep service-specific code isolated
+
+## Naming Conventions
+- Database tables: plural, lowercase (users, posts, products)
+- Model classes: singular, PascalCase (User, Post, Product)
+- API endpoints: kebab-case (/users/me, /products/{id})
+- Variables: snake_case
+- Constants: UPPER_SNAKE_CASE
+
+## Error Handling
+- Use HTTPException from FastAPI with appropriate status codes
+- Provide clear error messages
+- Log errors appropriately
+- Don't expose internal errors to clients
+
+## Testing
+- Write tests for all services
+- Use pytest for Python tests
+- Mock external dependencies
+- Test both success and error cases
+
+## Performance
+- Use database indexes appropriately
+- Implement caching with Redis where beneficial
+- Use connection pooling for database
+- Optimize queries (avoid N+1 problems)
+
+## Security
+- Never commit secrets or API keys
+- Use environment variables for configuration
+- Hash passwords with bcrypt
+- Validate and sanitize all inputs
+- Use CORS middleware appropriately
+
+## AI/ML Integration
+- Keep ML models in backend/ml/
+- Use separate endpoints for ML inference
+- Cache model predictions when appropriate
+- Monitor model performance
+
+## When Adding New Features
+1. Create database models first
+2. Create Pydantic schemas
+3. Implement API endpoints
+4. Add error handling
+5. Write tests
+6. Update documentation

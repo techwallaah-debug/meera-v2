@@ -1,0 +1,176 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.user-service
+    image: social-commerce/user-service:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  content-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.content-service
+    image: social-commerce/content-service:latest
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  product-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.product-service
+    image: social-commerce/product-service:latest
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.order-service
+    image: social-commerce/order-service:latest
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  search-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.search-service
+    image: social-commerce/search-service:latest
+    ports:
+      - "8005:8005"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.recommendation-service
+    image: social-commerce/recommendation-service:latest
+    ports:
+      - "8006:8006"
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.analytics-service
+    image: social-commerce/analytics-service:latest
+    ports:
+      - "8007:8007"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.notification-service
+    image: social-commerce/notification-service:latest
+    ports:
+      - "8008:8008"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: social_commerce
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7.2-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - social-commerce-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:
+
+networks:
+  social-commerce-network:
+    driver: bridge

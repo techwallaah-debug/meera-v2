@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: social-commerce
+data:
+  DATABASE_URL: "mysql+pymysql://admin:password@mysql-service:3306/social_commerce"
+  REDIS_URL: "redis://redis-service:6379"
+  ELASTICSEARCH_URL: "http://elasticsearch-service:9200"
+  ENVIRONMENT: "production"
+  DEBUG: "False"

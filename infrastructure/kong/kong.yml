@@ -1,0 +1,120 @@
+_format_version: "3.0"
+
+services:
+  - name: user-service
+    url: http://user-service:8001
+    routes:
+      - name: user-route
+        paths:
+          - /users
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+          headers:
+            - Authorization
+            - Content-Type
+
+  - name: content-service
+    url: http://content-service:8002
+    routes:
+      - name: content-route
+        paths:
+          - /content
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 200
+          hour: 5000
+
+  - name: product-service
+    url: http://product-service:8003
+    routes:
+      - name: product-route
+        paths:
+          - /products
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 150
+          hour: 3000
+
+  - name: order-service
+    url: http://order-service:8004
+    routes:
+      - name: order-route
+        paths:
+          - /orders
+          - /cart
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 50
+          hour: 500
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+
+  - name: search-service
+    url: http://search-service:8005
+    routes:
+      - name: search-route
+        paths:
+          - /search
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 300
+          hour: 10000
+
+  - name: recommendation-service
+    url: http://recommendation-service:8006
+    routes:
+      - name: recommendation-route
+        paths:
+          - /recommendations
+        strip_path: true
+
+  - name: analytics-service
+    url: http://analytics-service:8007
+    routes:
+      - name: analytics-route
+        paths:
+          - /analytics
+        strip_path: true
+
+  - name: notification-service
+    url: http://notification-service:8008
+    routes:
+      - name: notification-route
+        paths:
+          - /notifications
+        strip_path: true
+
+consumers:
+  - username: mobile-app
+    keyauth_credentials:
+      - key: mobile-app-key-12345
+
+  - username: web-app
+    keyauth_credentials:
+      - key: web-app-key-67890
+
+plugins:
+  - name: prometheus
+    config: {}

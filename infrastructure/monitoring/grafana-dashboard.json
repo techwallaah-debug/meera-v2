@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "title": "Social Commerce Platform Dashboard",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "title": "Response Time",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "title": "Active Users",
+        "targets": [
+          {
+            "expr": "sum(active_users)",
+            "legendFormat": "Total"
+          }
+        ]
+      },
+      {
+        "title": "Orders per Minute",
+        "targets": [
+          {
+            "expr": "rate(orders_created_total[1m])",
+            "legendFormat": "Orders"
+          }
+        ]
+      },
+      {
+        "title": "Cart Abandonment Rate",
+        "targets": [
+          {
+            "expr": "(carts_created_total - orders_created_total) / carts_created_total * 100",
+            "legendFormat": "Abandonment %"
+          }
+        ]
+      }
+    ]
+  }
+}

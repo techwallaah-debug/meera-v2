@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # User Service
+  user-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.user-service
+    image: social-commerce/user-service:latest
+    container_name: user-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - social-commerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Content Service
+  content-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.content-service
+    image: social-commerce/content-service:latest
+    container_name: content-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - social-commerce-network
+
+  # Product Service
+  product-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.product-service
+    image: social-commerce/product-service:latest
+    container_name: product-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - social-commerce-network
+
+  # Order Service
+  order-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.order-service
+    image: social-commerce/order-service:latest
+    container_name: order-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - social-commerce-network
+
+  # Search Service
+  search-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.search-service
+    image: social-commerce/search-service:latest
+    container_name: search-service
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - social-commerce-network
+
+  # Recommendation Service
+  recommendation-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.recommendation-service
+    image: social-commerce/recommendation-service:latest
+    container_name: recommendation-service
+    restart: unless-stopped
+    networks:
+      - social-commerce-network
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.analytics-service
+    image: social-commerce/analytics-service:latest
+    container_name: analytics-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/hostinger/Dockerfile.notification-service
+    image: social-commerce/notification-service:latest
+    container_name: notification-service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+    depends_on:
+      - mysql
+    networks:
+      - social-commerce-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - social-commerce-network
+    command: --default-authentication-plugin=mysql_native_password --max_connections=200
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - social-commerce-network
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - social-commerce-network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - user-service
+      - content-service
+      - product-service
+      - order-service
+      - search-service
+      - recommendation-service
+      - analytics-service
+      - notification-service
+    networks:
+      - social-commerce-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:
+
+networks:
+  social-commerce-network:
+    driver: bridge
