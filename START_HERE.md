@@ -1,16 +1,18 @@
 # 🎯 START HERE - No Server Needed!
 
-## ✅ **You Don't Need Any Server - Deploy for FREE!**
+## ✅ **We're Going with Railway**
+
+Deploy for FREE on Railway. One guide, ~10 minutes.
 
 ---
 
-## 🚀 **3 Simple Options (Choose One):**
+## 🚀 **Deploy on Railway (Our Choice)**
 
-### Option 1: Railway.app ⭐ (Easiest - Recommended)
+### Option 1: Railway.app ⭐
 
 **✅ FREE:** 500 hours/month  
 **⏱️ Time:** ~10 minutes  
-**📖 Guide:** [`infrastructure/railway/README.md`](infrastructure/railway/README.md)
+**📖 Guide:** **[`DEPLOY_ON_RAILWAY.md`](DEPLOY_ON_RAILWAY.md)** | [`infrastructure/railway/README.md`](infrastructure/railway/README.md)
 
 **Quick Start:**
 1. Push code to GitHub (repo already has `Dockerfile` and `railway.json` in root).
@@ -25,14 +27,15 @@
 ### Option 2: Render.com
 
 **✅ FREE:** Free tier available  
-**⏱️ Time:** 15 minutes  
-**📖 Guide:** `infrastructure/render/README.md`
+**⏱️ Time:** ~15 minutes  
+**📖 Guide:** [`infrastructure/render/README.md`](infrastructure/render/README.md) | Checklist: [`RENDER_DEPLOYMENT_CHECKLIST.md`](RENDER_DEPLOYMENT_CHECKLIST.md)
 
 **Quick Start:**
-1. Sign up: https://render.com
-2. Create web service
-3. Connect GitHub
-4. Deploy!
+1. Push code to GitHub (repo has `render.yaml` in root).
+2. Sign up at https://render.com → **Login with GitHub**.
+3. **New +** → **Blueprint** → Connect **Meera** repo (Render uses `render.yaml`).
+4. Set **`DATABASE_URL`** (external MySQL, e.g. PlanetScale or Railway) and **`JWT_SECRET_KEY`** in Environment.
+5. Deploy → use the service URL for `/health` and `/docs`.
 
 ---
 

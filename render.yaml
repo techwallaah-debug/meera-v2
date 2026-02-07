@@ -1,0 +1,27 @@
+# Render Blueprint - Meera User Service
+# Deploy: Render Dashboard → New + → Blueprint → Connect repo → Select Meera
+# See: infrastructure/render/README.md
+
+services:
+  - type: web
+    name: meera-user-service
+    env: python
+    region: oregon
+    plan: free
+
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python backend/services/user-service/src/main.py
+
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: ENVIRONMENT
+        value: production
+
+    healthCheckPath: /health

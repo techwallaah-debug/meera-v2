@@ -12,18 +12,15 @@ This platform enables users to:
 - Visual search for products
 - Follow creators and shop their recommendations
 
-## 🚀 Deployment Options (No Server Needed!)
+## 🚀 Deployment – We're Going with Railway
 
-**✅ Deploy for FREE - Multiple Options Available!**
+**Deploy for FREE on Railway.**
 
-- **🥇 Railway.app** (Recommended) - 500 hours/month free, auto-deploy from GitHub
-  - Guide: [`infrastructure/railway/README.md`](infrastructure/railway/README.md)
-- **🥈 Render.com** - Free tier, easy setup
-  - Guide: [`infrastructure/render/README.md`](infrastructure/render/README.md)
-- **🥉 Local + ngrok** - 100% free forever, perfect for testing
-  - Guide: [`infrastructure/ngrok/README.md`](infrastructure/ngrok/README.md)
+- **Deploy guide:** **[`DEPLOY_ON_RAILWAY.md`](DEPLOY_ON_RAILWAY.md)** ← start here
+- **Railway README:** [`infrastructure/railway/README.md`](infrastructure/railway/README.md)
+- **Checklist:** [`RAILWAY_DEPLOYMENT_CHECKLIST.md`](RAILWAY_DEPLOYMENT_CHECKLIST.md)
 
-**📖 See [`START_HERE.md`](START_HERE.md) for quick start guide!**
+Other options: Render ([`infrastructure/render/README.md`](infrastructure/render/README.md)), local + ngrok ([`infrastructure/ngrok/README.md`](infrastructure/ngrok/README.md)). See [`START_HERE.md`](START_HERE.md).
 
 ---
 
@@ -47,13 +44,15 @@ This platform enables users to:
 
 ## 🚀 Quick Start
 
-### Option A: Deploy to Free Hosting (Recommended)
+### Option A: Deploy on Railway (We're Going with Railway)
 
-**Railway (Easiest):**
-1. Sign up at https://railway.app
-2. Deploy from GitHub
-3. Add database
-4. Done! See [`infrastructure/railway/README.md`](infrastructure/railway/README.md)
+1. Push code to GitHub (see `PUSH_OR_NEW_REPO.md` if needed)
+2. Go to https://railway.app → Login with GitHub
+3. New Project → Deploy from GitHub repo → select Meera
+4. Add MySQL, set `DATABASE_URL` and `JWT_SECRET_KEY` in Variables
+5. Generate Domain → use the URL for `/health` and `/docs`
+
+**Full steps:** **[`DEPLOY_ON_RAILWAY.md`](DEPLOY_ON_RAILWAY.md)**
 
 **Render:**
 1. Sign up at https://render.com

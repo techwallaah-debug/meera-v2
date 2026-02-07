@@ -1,165 +1,136 @@
-# 🎨 Render.com Deployment Guide
+# Deploy Meera on Render.com
 
-## ✅ **Deploy for FREE on Render!**
-
-Render offers **free tier** - perfect for your platform!
+Deploy the **User Service** (and optionally more services) on Render using the config in this repo.
 
 ---
 
-## 🚀 **Quick Deploy (15 Minutes)**
+## What’s already set up
 
-### Step 1: Sign Up
+- **`render.yaml`** (project root) – Blueprint for the User Service
+- **User Service** – reads **`PORT`** and **`ENVIRONMENT`** from the environment (Render sets `PORT`)
 
-1. Go to https://render.com
-2. Sign up with GitHub (free)
-3. Verify email
+---
 
-### Step 2: Create Database
+## Option A: Deploy with Blueprint (recommended)
 
-1. Click **"New +"** → **"PostgreSQL"**
-2. Configure:
-   - **Name:** social-commerce-db
-   - **Database:** social_commerce
-   - **User:** admin
-   - **Plan:** Free
-3. Click **"Create Database"**
-4. Copy **Internal Database URL** (for services)
-5. Copy **External Database URL** (for local access)
+### 1. Push code to GitHub
 
-### Step 3: Deploy User Service
-
-1. Click **"New +"** → **"Web Service"**
-2. Connect GitHub repository
-3. Configure:
-   - **Name:** user-service
-   - **Environment:** Python 3
-   - **Region:** Singapore (or closest)
-   - **Branch:** main
-   - **Root Directory:** (leave empty)
-   - **Build Command:** `cd backend && pip install -r requirements.txt`
-   - **Start Command:** `cd backend/services/user-service/src && python main.py`
-4. Click **"Advanced"** → **"Add Environment Variable"**:
-   ```
-   DATABASE_URL=<paste Internal Database URL>
-   JWT_SECRET_KEY=your-super-secret-key
-   PORT=8001
-   ```
-5. Click **"Create Web Service"**
-
-### Step 4: Deploy Other Services
-
-Repeat Step 3 for:
-- **Content Service** (port 8002)
-- **Product Service** (port 8003)
-- **Order Service** (port 8004)
-
-**Each service gets its own URL!**
-
-### Step 5: Configure Environment Variables
-
-For each service, add environment variables:
-
-**Common Variables:**
-```
-DATABASE_URL=<Internal Database URL>
-JWT_SECRET_KEY=your-secret-key
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+```bash
+cd /path/to/Meera
+git add . && git commit -m "Add Render config" && git push origin main
 ```
 
-**Service-Specific:**
-- **Content Service:** AWS credentials, S3 bucket
-- **Order Service:** Razorpay keys
-- **Notification Service:** SendGrid, Twilio keys
+### 2. Sign up / log in on Render
 
-### Step 6: Deploy!
+1. Go to **https://render.com**
+2. **Login** → **Login with GitHub**
+3. Authorize Render for your GitHub account
 
-Render automatically:
-- ✅ Builds your service
-- ✅ Deploys
-- ✅ Provides public URL (e.g., `https://user-service.onrender.com`)
-- ✅ Sets up SSL automatically
+### 3. Create a Blueprint from the repo
 
-**Done! Your API is live!**
+1. In the Render dashboard, click **“New +”** → **“Blueprint”**
+2. Connect the **Meera** repository (or the repo that contains this code)
+3. Render will detect **`render.yaml`** and create the **meera-user-service** web service
+4. Click **“Apply”** to create the service
 
----
+### 4. Database (MySQL)
 
-## 📦 **Using render.yaml (Easier)**
+The app expects **MySQL** and a **`DATABASE_URL`** env var. Render’s free DB is **PostgreSQL**, so use one of:
 
-### Option: Deploy All Services at Once
+- **External MySQL** (e.g. [PlanetScale](https://planetscale.com) free tier, or [Railway](https://railway.app) MySQL)
+- Create the DB, copy the connection URL (e.g. `mysql+pymysql://user:pass@host:3306/db`)
 
-1. **Create `render.yaml`** in root (already created!)
-2. **Push to GitHub**
-3. **In Render dashboard:**
-   - Click **"New +"** → **"Blueprint"**
-   - Select repository
-   - Render reads `render.yaml` and creates all services!
+In Render:
 
-**Much easier!**
+1. Open **meera-user-service** → **Environment**
+2. Add variable: **`DATABASE_URL`** = your MySQL connection URL
+3. Add variable: **`JWT_SECRET_KEY`** = a long random secret (e.g. from a password generator)
 
----
+### 5. Deploy
 
-## 🔧 **Custom Domain**
+Render will build and deploy. When it’s done:
 
-### Add Custom Domain:
-
-1. In service dashboard → **"Settings"** → **"Custom Domains"**
-2. Add domain (e.g., `api.yourdomain.com`)
-3. Render provides DNS records
-4. Add DNS records to your domain provider
-5. Render auto-configures SSL!
+- **URL:** e.g. `https://meera-user-service.onrender.com`
+- **Health:** `https://meera-user-service.onrender.com/health`
+- **Docs:** `https://meera-user-service.onrender.com/docs`
 
 ---
 
-## 📊 **Monitoring**
+## Option B: Manual Web Service (no Blueprint)
 
-Render provides:
-- ✅ Logs (real-time)
-- ✅ Metrics (CPU, memory)
-- ✅ Deployments history
-- ✅ Environment variables management
+### 1. New Web Service
 
----
+1. **New +** → **Web Service**
+2. Connect the **Meera** GitHub repo
+3. Use branch **main**
 
-## 💰 **Free Tier Limits**
+### 2. Configure build and start
 
-- ✅ **Free tier** available
-- ✅ **750 hours/month** free
-- ✅ **PostgreSQL** free (90 days, then $7/month)
-- ✅ **SSL** included
-- ✅ **Auto-deploy** from Git
+- **Name:** `meera-user-service`
+- **Region:** Oregon (or closest)
+- **Root Directory:** *(leave empty)*
+- **Environment:** Python 3
+- **Build Command:** `pip install -r backend/requirements.txt`
+- **Start Command:** `python backend/services/user-service/src/main.py`
+- **Plan:** Free
 
-**Perfect for MVP and testing!**
+### 3. Environment variables
 
----
+Add at least:
 
-## ⚠️ **Free Tier Notes**
+| Variable | Value |
+|----------|--------|
+| `DATABASE_URL` | Your MySQL connection URL (external DB) |
+| `JWT_SECRET_KEY` | Long random secret |
+| `JWT_ALGORITHM` | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` |
+| `ENVIRONMENT` | `production` |
 
-- **Services sleep after 15 minutes** of inactivity
-- **First request** after sleep takes ~30 seconds (cold start)
-- **Upgrade to paid** for always-on services
+Render sets **`PORT`** automatically; the app uses it.
 
-**For production, consider paid plan ($7/month per service)**
+### 4. Create Web Service
 
----
-
-## 🚀 **Deploy Now!**
-
-1. **Sign up:** https://render.com
-2. **Deploy:** Follow steps above
-3. **Done!** Your API is live!
-
-**Need help? Check Render docs:** https://render.com/docs
+Click **Create Web Service**. Render will build and deploy.
 
 ---
 
-## ✅ **Benefits:**
+## Free tier notes
 
-- ✅ **Free tier** - 750 hours/month
-- ✅ **Auto-deploy** - Push to GitHub = auto-deploy
-- ✅ **PostgreSQL** - Free database
-- ✅ **SSL included** - HTTPS automatically
-- ✅ **Easy setup** - Simple dashboard
-- ✅ **Blueprint** - Deploy all services at once
+- **Services sleep** after ~15 minutes of no traffic
+- **First request** after sleep can take ~30 seconds (cold start)
+- **750 hours/month** free; enough for one small service
+- **Database:** Use external MySQL (PlanetScale, Railway, etc.); Render’s free DB is PostgreSQL
 
-**Perfect for your platform!**
+---
+
+## Custom domain
+
+1. **meera-user-service** → **Settings** → **Custom Domains**
+2. Add your domain (e.g. `api.yourdomain.com`)
+3. Add the CNAME (or A) record Render shows at your DNS provider
+4. Render will handle SSL
+
+---
+
+## Deploy more services (Content, Product, Order)
+
+Repeat **Option B** for each service with:
+
+- **Content:** start command `python backend/services/content-service/src/main.py`, port 8002
+- **Product:** `python backend/services/product-service/src/main.py`, port 8003
+- **Order:** `python backend/services/order-service/src/main.py`, port 8004
+
+Or extend **`render.yaml`** with more `services` entries and redeploy the Blueprint.
+
+---
+
+## Quick checklist
+
+- [ ] Code pushed to GitHub (including `render.yaml`)
+- [ ] Render account linked to GitHub
+- [ ] Blueprint created from Meera repo (or Web Service created manually)
+- [ ] `DATABASE_URL` set (external MySQL)
+- [ ] `JWT_SECRET_KEY` set
+- [ ] Service has a public URL; `/health` and `/docs` work
+
+Full Render docs: **https://render.com/docs**
