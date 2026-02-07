@@ -58,8 +58,16 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Create tables on startup (not at import) so app can start even if DB not configured yet
+@app.on_event("startup")
+def create_tables():
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import logging
+        logging.warning(
+            "Database connection failed (set DATABASE_URL in Railway Variables): %s", e
+        )
 
 # Pydantic Schemas
 class UserCreate(BaseModel):

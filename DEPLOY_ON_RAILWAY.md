@@ -37,12 +37,18 @@ If you need to set up the remote or fix push issues, see **`PUSH_OR_NEW_REPO.md`
 3. Select the **Meera** repository
 4. Railway will detect the **Dockerfile** and **railway.json** and start building
 
-### 4. Add MySQL
+### 4. Add MySQL and set DATABASE_URL (required)
+
+**You must set DATABASE_URL or the app will crash with "Can't connect to MySQL server on 'localhost' (Connection refused)".**
 
 1. In the project, click **New**
 2. **Database** → **Add MySQL** (or **Add Plugin** → MySQL)
 3. Wait for the MySQL service to be ready
-4. Open the MySQL service → **Variables** or **Connect** and copy the **connection URL**
+4. Open the **MySQL** service → **Variables** or **Connect**
+5. Copy the **connection URL** (e.g. `mysql://root:xxx@mysql.railway.internal:3306/railway` or the **Public** URL if your plan shows it). It may be named `DATABASE_URL` or `MYSQL_URL` – copy the full value.
+6. Open your **User Service** (the web service, not MySQL) → **Variables**
+7. Click **New Variable** → name: `DATABASE_URL`, value: paste the MySQL connection URL you copied. If the URL uses `mysql://`, change it to `mysql+pymysql://` so Python can connect (e.g. `mysql+pymysql://root:password@host:3306/railway`).
+8. Save. Redeploy the User Service if it was already deployed.
 
 ### 5. Set environment variables (User Service)
 

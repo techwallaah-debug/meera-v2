@@ -30,7 +30,25 @@ Common errors and fixes when deploying Meera on Railway.
 
 ---
 
-## 3. Application crash / 503 / "Application failed to respond"
+## 3. "Can't connect to MySQL server on 'localhost' (Connection refused)"
+
+**Symptom:** Logs show `sqlalchemy.exc.OperationalError` / `Connection refused` / `localhost`.
+
+**Cause:** `DATABASE_URL` is not set (or is wrong) in Railway, so the app uses the default `localhost:3306` and fails.
+
+**Fix:**
+
+1. In Railway, add **MySQL** to the same project: **New** → **Database** → **MySQL**.
+2. Open the **MySQL** service → **Variables** or **Connect** → copy the **connection URL** (e.g. `mysql://root:xxx@mysql.railway.internal:3306/railway`).
+3. If the URL is `mysql://...`, change it to **`mysql+pymysql://...`** (replace the first `mysql` with `mysql+pymysql`).
+4. Open your **User Service** (the web service) → **Variables** → **New Variable**: name **`DATABASE_URL`**, value = the URL you copied (with `mysql+pymysql://`).
+5. Save and **Redeploy** the User Service.
+
+After this, the app will connect to Railway's MySQL instead of localhost.
+
+---
+
+## 4. Application crash / 503 / "Application failed to respond"
 
 **Symptom:** Service starts then crashes, or Railway shows 503 / "Application failed to respond".
 
@@ -38,7 +56,7 @@ Common errors and fixes when deploying Meera on Railway.
 
 | Cause | What to do |
 |-------|------------|
-| **DATABASE_URL missing or wrong** | In Railway → User Service → **Variables**: set `DATABASE_URL` to the MySQL connection URL from your MySQL plugin (e.g. `mysql+pymysql://user:pass@host:port/db`). |
+| **DATABASE_URL missing or wrong** | In Railway → User Service → **Variables**: set `DATABASE_URL` to the MySQL connection URL from your MySQL plugin (e.g. `mysql+pymysql://user:pass@host:port/db`). See section 3 above. |
 | **MySQL not reachable** | Use Railway’s **MySQL** plugin in the same project and use the **internal** connection URL Railway gives you. |
 | **App not listening on PORT** | The app already reads `PORT` from the environment. Don’t hardcode the port; leave it as in the code. |
 | **JWT_SECRET_KEY missing** | In **Variables**, add `JWT_SECRET_KEY` (long random string) and `ENVIRONMENT=production`. |
@@ -47,7 +65,7 @@ Check **Logs** in the Railway service for the exact error (e.g. connection refus
 
 ---
 
-## 4. Build fails: "requirements.txt" or pip error
+## 5. Build fails: "requirements.txt" or pip error
 
 **Symptom:** `pip install` fails (e.g. package not found, version conflict).
 
@@ -62,7 +80,7 @@ Then push and redeploy.
 
 ---
 
-## 5. Health check fails / service marked unhealthy
+## 6. Health check fails / service marked unhealthy
 
 **Symptom:** Railway says the service is unhealthy or the generated URL returns 502/503.
 
@@ -74,7 +92,7 @@ Then push and redeploy.
 
 ---
 
-## 6. "No such file or directory" or wrong path in Docker
+## 7. "No such file or directory" or wrong path in Docker
 
 **Symptom:** Logs show file not found for `backend/` or `main.py`.
 
