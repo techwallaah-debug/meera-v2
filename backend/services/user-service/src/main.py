@@ -2,44 +2,25 @@
 User Service - Handles user registration, authentication, and profiles
 Port: 8001
 """
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+import logging
+from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import Optional
 
-# Import shared utilities
-import sys
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
+from sqlalchemy.orm import Session
+
 import os
+import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
 
 from shared.database.connection import get_db, Base, engine
 from shared.auth.jwt import create_access_token, verify_token
 from shared.auth.password import verify_password, get_password_hash
-
-# Database Models
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
-
-# FastAPI app
-app = FastAPI(
-    title="User Service",
-    version="1.0.0",
-    description="User registration, authentication, and profile management"
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Database Models
 class User(Base):
@@ -58,16 +39,38 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# Create tables on startup (not at import) so app can start even if DB not configured yet
-@app.on_event("startup")
-def create_tables():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: create DB tables. Shutdown: nothing."""
     try:
         Base.metadata.create_all(bind=engine)
     except Exception as e:
-        import logging
         logging.warning(
             "Database connection failed (set DATABASE_URL in Railway Variables): %s", e
         )
+    yield
+
+
+# FastAPI app
+app = FastAPI(
+    title="User Service",
+    version="1.0.0",
+    description="User registration, authentication, and profile management",
+    lifespan=lifespan,
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# OAuth2 scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Pydantic Schemas
 class UserCreate(BaseModel):
